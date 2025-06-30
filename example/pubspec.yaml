@@ -12,6 +12,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  id_card_picker:
+    path: ../
 
 dev_dependencies:
   flutter_test:
