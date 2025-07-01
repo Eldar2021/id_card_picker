@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:id_card_picker/src/camera/camera_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class IdCardPicker {
+abstract class IdCardPicker {
   static Future<File?> pick({
     required BuildContext context,
     String label = 'Scan ID Card',

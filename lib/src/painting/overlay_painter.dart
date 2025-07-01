@@ -15,7 +15,6 @@ class OverlayPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final screenWidth = size.width;
     final screenHeight = size.height;
-
     final frameWidth = screenWidth * 0.9;
     final frameHeight = frameWidth / ratio;
     final frameLeft = (screenWidth - frameWidth) / 2;

@@ -6,7 +6,7 @@ import 'package:id_card_picker/src/painting/overlay_painter.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
-class ImageCropperService {
+abstract class ImageCropperService {
   static Future<File?> cropImage({
     required String imagePath,
     required Size screenSize,
@@ -43,6 +43,7 @@ class ImageCropperService {
   static Rect _calculateCropRect(Size screenSize, img.Image image) {
     final imageWidth = image.width.toDouble();
     final imageHeight = image.height.toDouble();
+
     final screenAspectRatio = screenSize.width / screenSize.height;
     final imageAspectRatio = imageWidth / imageHeight;
 
@@ -68,11 +69,21 @@ class ImageCropperService {
     final cropWidth = frameWidthOnScreen * scale;
     final cropHeight = frameHeightOnScreen * scale;
 
-    return Rect.fromLTWH(
-      cropX - 50,
-      cropY - 10,
-      cropWidth + 110,
-      cropHeight + 20,
+    final horizontalPadding = cropWidth * 0.125;
+    final verticalPadding = cropHeight * 0.05;
+
+    final finalX = cropX - horizontalPadding;
+    final finalY = cropY - verticalPadding;
+    final finalWidth = cropWidth + (horizontalPadding * 2);
+    final finalHeight = cropHeight + (verticalPadding * 2);
+
+    final safeRect = Rect.fromLTWH(
+      finalX < 0 ? 0 : finalX,
+      finalY < 0 ? 0 : finalY,
+      (finalX + finalWidth) > imageWidth ? imageWidth - finalX : finalWidth,
+      (finalY + finalHeight) > imageHeight ? imageHeight - finalY : finalHeight,
     );
+
+    return safeRect;
   }
 }
