@@ -10,7 +10,6 @@ abstract class ImageCropperService {
   static Future<File?> cropImage({
     required String imagePath,
     required Size screenSize,
-    required Size cameraPreviewSize,
   }) async {
     try {
       final imageBytes = await File(imagePath).readAsBytes();

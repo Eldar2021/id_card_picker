@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:developer';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:id_card_picker/src/painting/overlay_painter.dart';
 import 'package:id_card_picker/src/services/image_cropper_service.dart';
+import 'package:id_card_picker/src/widgets/camera_view.dart';
+import 'package:id_card_picker/src/widgets/centered_progressing_indicator.dart';
+import 'package:id_card_picker/src/widgets/centered_text.dart';
 
 class CameraPage extends StatefulWidget {
   const CameraPage({
@@ -22,34 +26,58 @@ class CameraPage extends StatefulWidget {
 
 class _CameraPageState extends State<CameraPage> {
   CameraController? _cameraController;
-  List<CameraDescription>? _cameras;
-  bool _isInitializing = true;
+  late Future<void> _initializeControllerFuture;
   bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    _initializeControllerFuture = _initializeCamera();
   }
 
   Future<void> _initializeCamera() async {
     try {
-      _cameras = await availableCameras();
-      if (_cameras != null && _cameras!.isNotEmpty) {
-        _cameraController = CameraController(
-          _cameras![0],
-          ResolutionPreset.high,
-          enableAudio: false,
-        );
-        await _cameraController!.initialize();
-        if (!mounted) return;
-        setState(() {
-          _isInitializing = false;
-        });
-      }
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) throw Exception('No cameras available.');
+
+      _cameraController = CameraController(
+        cameras[0],
+        ResolutionPreset.high,
+        enableAudio: false,
+      );
+      await _cameraController!.initialize();
     } on Exception catch (e) {
       log('Error initializing camera: $e');
       if (mounted) Navigator.pop(context);
+    }
+  }
+
+  Future<void> _onCapturePressed() async {
+    if (_isProcessing) return;
+
+    final controller = _cameraController;
+    if (controller == null || !controller.value.isInitialized) {
+      log('Camera is not initialized.');
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final screenSize = MediaQuery.of(context).size;
+      final imageFile = await controller.takePicture();
+
+      final croppedFile = await ImageCropperService.cropImage(
+        imagePath: imageFile.path,
+        screenSize: screenSize,
+      );
+
+      if (mounted) Navigator.pop(context, croppedFile);
+    } on Exception catch (e) {
+      log('Error capturing or cropping image: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
@@ -59,87 +87,32 @@ class _CameraPageState extends State<CameraPage> {
     super.dispose();
   }
 
-  Future<void> _onCapturePressed() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      return;
-    }
-
-    setState(() {
-      _isProcessing = true;
-    });
-
-    try {
-      final screenSize = MediaQuery.of(context).size;
-      final imageFile = await _cameraController!.takePicture();
-
-      final previewSize = _cameraController!.value.previewSize!;
-
-      final croppedFile = await ImageCropperService.cropImage(
-        imagePath: imageFile.path,
-        screenSize: screenSize,
-        cameraPreviewSize: previewSize,
-      );
-
-      if (mounted) {
-        Navigator.pop(context, croppedFile);
-      }
-    } on Exception catch (e) {
-      log('Error capturing or cropping image: $e');
-      setState(() {
-        _isProcessing = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isInitializing) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       extendBodyBehindAppBar: true,
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: CameraPreview(_cameraController!),
-          ),
-          Positioned.fill(
-            child: CustomPaint(
-              painter: OverlayPainter(
-                backgroundColor: widget.overlayBackgroundColor,
-                borderColor: widget.overlayBorderColor,
-              ),
-            ),
-          ),
-          if (_isProcessing)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            )
-          else
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 50),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.camera_alt,
-                    color: Colors.white,
-                    size: 72,
-                  ),
-                  onPressed: _onCapturePressed,
-                ),
-              ),
-            ),
-        ],
+      body: FutureBuilder<void>(
+        future: _initializeControllerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) return CenteredText(snapshot.error);
+            return CameraView(
+              controller: _cameraController!,
+              isProcessing: _isProcessing,
+              onCapture: _onCapturePressed,
+              overlayBorderColor: widget.overlayBorderColor,
+              overlayBackgroundColor: widget.overlayBackgroundColor,
+            );
+          } else {
+            return const CenteredProgressingIndicator();
+          }
+        },
       ),
     );
   }
