@@ -34,7 +34,8 @@ class _HomePageState extends State<HomePage> {
     final File? imageFile = await IdCardPicker.pick(
       context: context,
       label: 'Kimliğini Tara',
-      overlayBorderColor: Colors.greenAccent,
+      overlayBorderColor: Colors.red,
+      overlayBackgroundColor: Colors.black,
     );
 
     if (imageFile != null) {
@@ -60,7 +61,13 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             if (_croppedImageFile != null)
-              Padding(padding: const EdgeInsets.all(16.0), child: Image.file(_croppedImageFile!, height: 200))
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadiusGeometry.circular(12),
+                  child: Image.file(_croppedImageFile!, height: 200),
+                ),
+              )
             else
               const Text('Press the button to scan your ID card.'),
             const SizedBox(height: 30),
