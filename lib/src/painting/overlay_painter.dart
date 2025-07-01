@@ -9,7 +9,7 @@ class OverlayPainter extends CustomPainter {
   final Color backgroundColor;
   final Color borderColor;
 
-  static const double ratio = 85.6 / 53.98;
+  static const double ratio = 4 / 3;
 
   @override
   void paint(Canvas canvas, Size size) {

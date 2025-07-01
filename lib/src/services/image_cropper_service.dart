@@ -41,31 +41,38 @@ class ImageCropperService {
   }
 
   static Rect _calculateCropRect(Size screenSize, img.Image image) {
-    final imageWidth = image.width;
-    final imageHeight = image.height;
+    final imageWidth = image.width.toDouble();
+    final imageHeight = image.height.toDouble();
+    final screenAspectRatio = screenSize.width / screenSize.height;
+    final imageAspectRatio = imageWidth / imageHeight;
+
+    double scale;
+    double blankWidth = 0;
+    double blankHeight = 0;
+
+    if (imageAspectRatio > screenAspectRatio) {
+      scale = imageHeight / screenSize.height;
+      blankWidth = imageWidth - screenSize.width * scale;
+    } else {
+      scale = imageWidth / screenSize.width;
+      blankHeight = imageHeight - screenSize.height * scale;
+    }
 
     final frameWidthOnScreen = screenSize.width * 0.9;
     final frameHeightOnScreen = frameWidthOnScreen / OverlayPainter.ratio;
     final frameLeftOnScreen = (screenSize.width - frameWidthOnScreen) / 2;
     final frameTopOnScreen = (screenSize.height - frameHeightOnScreen) / 2;
 
-    final scaleX = imageWidth / screenSize.width;
-    final scaleY = imageHeight / screenSize.height;
-    final scale = scaleX < scaleY ? scaleX : scaleY;
-
-    final cropX = (frameLeftOnScreen * scale).toInt();
-    final cropY = (frameTopOnScreen * scale).toInt();
-    final cropWidth = (frameWidthOnScreen * scale).toInt();
-    final cropHeight = (frameHeightOnScreen * scale).toInt();
-
-    final safeCropX = cropX.clamp(0, imageWidth - cropWidth);
-    final safeCropY = cropY.clamp(0, imageHeight - cropHeight);
+    final cropX = (frameLeftOnScreen * scale) + (blankWidth / 2);
+    final cropY = (frameTopOnScreen * scale) + (blankHeight / 2);
+    final cropWidth = frameWidthOnScreen * scale;
+    final cropHeight = frameHeightOnScreen * scale;
 
     return Rect.fromLTWH(
-      safeCropX.toDouble(),
-      safeCropY.toDouble(),
-      cropWidth.toDouble(),
-      cropHeight.toDouble(),
+      cropX - 50,
+      cropY - 10,
+      cropWidth + 110,
+      cropHeight + 20,
     );
   }
 }
