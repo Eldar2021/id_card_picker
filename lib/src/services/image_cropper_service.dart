@@ -6,6 +6,9 @@ import 'package:id_card_picker/src/painting/overlay_painter.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
+const double _horizontalPaddingRatio = 0.125;
+const double _verticalPaddingRatio = 0.05;
+
 abstract class ImageCropperService {
   static Future<File?> cropImage({
     required String imagePath,
@@ -68,8 +71,8 @@ abstract class ImageCropperService {
     final cropWidth = frameWidthOnScreen * scale;
     final cropHeight = frameHeightOnScreen * scale;
 
-    final horizontalPadding = cropWidth * 0.125;
-    final verticalPadding = cropHeight * 0.05;
+    final horizontalPadding = cropWidth * _horizontalPaddingRatio;
+    final verticalPadding = cropHeight * _verticalPaddingRatio;
 
     final finalX = cropX - horizontalPadding;
     final finalY = cropY - verticalPadding;

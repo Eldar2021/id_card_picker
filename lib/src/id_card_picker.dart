@@ -8,6 +8,7 @@ abstract class IdCardPicker {
   static Future<File?> pick({
     required BuildContext context,
     String label = 'Scan ID Card',
+    String onPermissionDenied = 'Camera permission denied',
     Color overlayBackgroundColor = Colors.black54,
     Color overlayBorderColor = Colors.white,
   }) async {
@@ -25,6 +26,11 @@ abstract class IdCardPicker {
       );
       return result;
     } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(onPermissionDenied)),
+        );
+      }
       log('Camera permission denied.');
       return null;
     }
