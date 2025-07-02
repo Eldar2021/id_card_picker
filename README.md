@@ -16,9 +16,10 @@ Handles camera permissions, provides a customizable camera overlay, and returns 
 ---
 
 ## 🖼️ Demo
+
 <p align="center">
   <!-- Place your demo.gif or a short video here -->
-  <img src="/doc/id_card_picker_example.gif" alt="Id Card Picker Demo" width="300"/>
+  <img src="/doc/id_card_picker.gif" alt="Id Card Picker Demo" width="300"/>
 </p>
 
 ---
